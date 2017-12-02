@@ -12,6 +12,9 @@ const (
 	DRUID_DATA_SOURCE = "druidDS"
 	DATA_SOURCE       = "dataSource"
 
+	FILTERS = "filters"
+	FILTER  = "filter"
+
 	CUSTOM_GRANULARITY = "customGranularity"
 	GRANULARITY        = "granularity"
 
@@ -31,6 +34,17 @@ const (
 )
 
 func (e *DruidQueryParser) ParseQuery(data *simplejson.Json, queryContext *tsdb.QueryContext) {
+
+	filters := data.Get(FILTERS).MustArray()
+	data.Del(FILTERS)
+	if len(filters) == 1 {
+		data.Set(FILTER, filters[0])
+	} else if len(filters) > 1 {
+		filter := simplejson.New()
+		filter.Set("type", "and")
+		filter.Set("fields", filters)
+		data.Set(FILTER, filter)
+	}
 
 	dataSource := data.Get(DRUID_DATA_SOURCE).MustString()
 	if dataSource != "" {
